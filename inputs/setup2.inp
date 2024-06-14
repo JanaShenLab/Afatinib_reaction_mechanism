@@ -1,0 +1,102 @@
+*  Periodic boundary METHOD
+*  generate the psf for protein(EGFR), afatinib, and crystal water    
+*  QM/MM partition
+*
+
+BOMLEV -2
+!
+! Topology file
+! -------------
+OPEN READ FORMatted UNIT 1 NAME "~/kinase/toppar/top_all36_prot.rtf"
+READ RTF CARD UNIT 1
+CLOSe UNIT 1
+
+!
+! Parameter file
+! --------------
+OPEN READ FORMatted UNIT 1 NAME "~/kinase/toppar/par_all36_prot.prm"
+!READ PARAmeter CARD UNIT 1
+READ PARAmeter CARD UNIT 1 flex
+CLOSe UNIT 1
+
+! Read top/par file for model compounds
+! -------------------------------------------------
+stream ~/kinase/toppar/toppar_all36_prot_model.str
+
+! Read top/par file for water or ions
+! -------------------------------------------------
+stream ~/kinase/toppar/toppar_water_ions.str
+
+! read in coordinates for protein    
+!-------------------------------------
+open read form unit 11 name setup1_4g5j.pdb
+read sequ pdb unit 11
+
+generate 4G5J setup first GLYP last CTER
+
+rewind unit 11
+read coord pdb unit 11
+close unit 11
+
+! read in coordinates for QM atoms
+!---------------------------------------
+open read form unit 12 name qmp.pdb
+read sequ pdb unit 12
+
+generate QMP setup first none last none
+
+rewind unit 12
+read coord pdb unit 12 
+close unit 12
+
+! read in coordinates for afatinib
+!-------------------------------------
+open read form unit 13 name setup1_afa.pdb
+read sequ pdb unit 13
+
+generate AFA  setup first none last none
+
+rewind unit 13
+read coord pdb unit 13
+close unit 13
+
+patch RQMP QMP 1 4G5J 797 AFA 1 
+autogen angle dihedral
+
+! read in crystal water coordinates
+!------------------------------------
+open read form unit 13 name setup1_cwat.pdb
+read sequ pdb unit 13
+
+generate cwat first none last none noangle nodihedral
+
+rewind unit 13
+read coord pdb unit 13
+
+join cwat renu
+
+! WRITE NEW PDB.
+!---------------
+OPEN UNIT 1 CARD WRITe NAME setup2.pdb
+WRITe COORdinate PDB UNIT 1
+* PDB file.
+* QM/MM partition
+*
+
+! Write new coordinate file
+!----------------------------
+open write card unit 1 name setup2.crd
+write coor card unit 1
+* Coordinate file
+* QM/MM partition
+*
+!
+! Write PSF file
+! ---------------------
+OPEN UNIT 1 CARD WRITe NAME setup2.psf
+WRITe PSF CARD UNIT 1
+* PSF file
+* QM/MM partition
+*
+
+stop

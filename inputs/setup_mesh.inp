@@ -1,0 +1,57 @@
+*  generate the psf for mesh 
+*
+
+BOMLEV -2
+!
+! Topology file
+! -------------
+OPEN READ FORMatted UNIT 1 NAME "~/kinase/toppar/top_all36_prot.rtf"
+READ RTF CARD UNIT 1
+CLOSe UNIT 1
+
+!
+! Parameter file
+! --------------
+OPEN READ FORMatted UNIT 1 NAME "~/kinase/toppar/par_all36_prot.prm"
+!READ PARAmeter CARD UNIT 1
+READ PARAmeter CARD UNIT 1 flex
+CLOSe UNIT 1
+
+! Read top/par file for model compounds
+! -------------------------------------------------
+stream ~/kinase/toppar/toppar_all36_prot_model.str
+
+! read in coordinates for enzyme SUBA
+!-------------------------------------
+open read form unit 10 name mesh.pdb
+read sequ pdb unit 10
+
+generate MESH setup first none last none
+
+rewind unit 10
+read coord pdb unit 10
+close unit 10
+
+! WRITE NEW PDB.
+!---------------
+OPEN UNIT 1 CARD WRITe NAME setup_mesh.pdb
+WRITe COORdinate PDB UNIT 1
+* PDB file.         
+*  
+
+! Write new coordinate file
+!----------------------------
+open write card unit 1 name setup_mesh.crd
+write coor card unit 1
+* Coordinate file
+*
+ 
+! Write PSF file              
+! ---------------------
+OPEN UNIT 1 CARD WRITe NAME setup_mesh.psf
+WRITe PSF CARD UNIT 1
+* PSF file
+*  
+
+stop
+end

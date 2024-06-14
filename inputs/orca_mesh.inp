@@ -1,0 +1,23 @@
+! wB97X-D3BJ 6-311+G** autoaux RIJCOSX NOSOSCF opt freq tightscf
+
+%scf
+MaxIter 500
+end
+
+%maxcore 1800
+%pal nprocs 1 
+end
+
+%method
+Z_solver DIIS
+Z_MaxIter 500
+end
+
+* xyz  0 1
+ C       0.064   0.580   0.079
+ H      -0.143   1.254  -0.758  
+ H      -0.130   1.152   0.990  
+ H      -0.694  -0.208   0.035  
+ S       1.749  -0.037  -0.039  
+ H       1.760  -0.793   1.032  
+END

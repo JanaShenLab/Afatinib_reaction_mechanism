@@ -1,0 +1,105 @@
+*  Periodic boundary METHOD
+*  ENERGY MINIMIZATION                   
+*  QM-MM partition
+*
+
+BOMLEV 0
+
+! Set parameters
+! --------------
+set TOPPAR  = /home/sma/kinase/toppar               ! topology and parameters directory
+set top     = @TOPPAR/top_all36_prot.rtf            ! Protein topology
+set par     = @TOPPAR/par_all36_prot.prm            ! Protein parameters
+set watstr  = @TOPPAR/toppar_water_ions.str         ! water and ions
+set modstr  = @TOPPAR/toppar_all36_prot_model.str   ! model compound parameters
+
+! Read topology and parameter files
+! ---------------------------------
+open read card unit 10 name @top
+read  rtf card unit 10
+close unit 10
+
+open read card unit 10 name @par
+read param card flex unit 10
+close unit 10
+
+! Read top/par file for model compounds
+! -------------------------------------------------
+stream @modstr
+
+! Read water top file
+! -------------------
+stream @watstr
+
+!Read PSF file
+!----------------
+open read form unit 10 name setup4.psf
+read psf card unit 10
+close unit 10
+
+! Read in coordinate file
+!------------------------------
+open read form unit 13 name setup42.crd
+read coord card unit 13
+close unit 13
+
+! Define selections
+! -----------------
+define prot sele segid 4G5J end
+define qms sele segid QMP  end
+
+define solu sele prot .or. qms end
+
+define solv sele segid CWAT .or. segid SOLV .or. segid SOD end
+
+!define water   sele resn TIP3 end
+!define heavy   sele protein .and. ( .not. hydrogen ) end
+
+! Set-up image information for cubic periodic boundaries
+!-----------------------------------------------------------
+set 6 85.0000
+set 7 77.0000
+set 8 66.0000
+
+!define the crystal lattice type and geometry
+!-------------------------------------------------
+crystal define ORTH   @6 @7 @8  90.0  90.0  90.0
+
+! build the crystal along with the images within the cutoff
+!------------------------------------------------------------
+crystal build Noper 0 cutoff 14.0
+
+! Only Recenter water and counter ions
+!--------------------------------------
+image byres xcen 0.0 ycen 0.0 zcen 0.0 select solv end
+
+update elec group switch Ewald PMEwald Kappa 0.34 -
+       ORDEr 6 FFTX 72 FFTY 72 FFTZ 60 QCOR 0 -
+       vdw vgroup vswitch -
+       cutnb 14.0 ctofnb 13.0 ctonnb 12.0 WMIN 1.2  -
+       inbf 25 imgfrq 25  cutim 14.0
+
+quantum group sele qms end glnk sele bynu 5225 show end - !
+        REMO pdp3 charge 0.0 scfc 0.000001 SWITched -!NOGAussian
+        NEWD 1 KMAX 5
+
+! Minimization                
+!----------------------------------
+
+Mini abnr nsteps  40
+
+! Write new coordinate file
+!----------------------------
+open write form unit 15 name setup43.crd
+write coord card unit 15
+
+! Write new PDB file
+!---------------------
+open write form unit 15 name setup43.pdb
+write coord pdb unit 15               
+
+scalar x statistics sele solu end
+scalar y statistics sele solu end
+scalar z statistics sele solu end
+
+stop 

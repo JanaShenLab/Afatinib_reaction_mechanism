@@ -1,0 +1,97 @@
+*  Periodic boundary METHOD
+*  generate the psf for the protein(EGFR),afatinib, crystal and bulk water -
+*  and sodium ions
+*  QM/MM partition
+*
+
+! Set parameters
+! --------------
+set TOPPAR  = /home/sma/kinase/toppar               ! topology and parameters directory
+set top     = @TOPPAR/top_all36_prot.rtf            ! Protein topology
+set par     = @TOPPAR/par_all36_prot.prm            ! Protein parameters
+set watstr  = @TOPPAR/toppar_water_ions.str         ! water and ions
+set modstr  = @TOPPAR/toppar_all36_prot_model.str   ! model compound parameters
+
+! Read topology and parameter files
+! ---------------------------------
+open read card unit 10 name @top
+read  rtf card unit 10
+close unit 10
+
+open read card unit 10 name @par
+read param card flex unit 10
+close unit 10
+
+! Read top/par file for model compounds
+! -------------------------------------------------
+stream @modstr
+
+! Read water top file
+! -------------------
+stream @watstr
+
+!Read PSF file
+!----------------
+open read form unit 10 name setup3.psf
+read psf card unit 10
+close unit 10
+
+! Read in coordinate file
+!------------------------------
+open read form unit 13 name setup3.crd
+read coord card unit 13
+close unit 13
+
+! Read in sodium ions 
+!--------------------------
+open read form unit 15 name "setup3_sod.pdb"
+read sequence pdb unit 15
+rewind unit 15
+
+generate SOD  setup noangle nodihedral
+
+read coor pdb  unit 15
+close unit 15
+
+
+!**************************************************************
+! delete bulk water molecules that are overlapping with Na ions
+! within 2.5 A
+!**************************************************************
+dele atom sele (.byres. ( segid SOLV .and. type oh2 .and. -
+     ( (segid sod  .and. .not. hydrogen ) -
+     .around. 2.5 ) )) show end
+
+!join CWAT BULK renumber
+!rena segid SOLV sele segid CWAT end
+
+join SOLV renumber
+
+! WRITE NEW PDB.
+!---------------
+OPEN UNIT 1 CARD WRITe NAME setup4.pdb
+WRITe COORdinate PDB UNIT 1
+* PDB file.
+* generate the psf for the protein(EGFR),afatinib,crystal and bulk water,and Na+
+* QM/MM partition
+*
+
+! Write new coordinate file
+!----------------------------
+open write card unit 1 name setup4.crd
+write coor card unit 1
+* Coordinate file
+* generate the psf for the protein(EGFR),afatinib,crystal and bulk water,and Na+          
+* QM/MM partition
+*
+!
+! Write PSF file
+! ---------------------
+OPEN UNIT 1 CARD WRITe NAME setup4.psf
+WRITe PSF CARD UNIT 1
+* PSF file
+* generate the psf for the protein(EGFR),afatinib,crystal and bulk water,and Na+          
+* QM/MM partition
+*
+
+stop

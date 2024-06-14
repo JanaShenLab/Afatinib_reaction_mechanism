@@ -1,0 +1,100 @@
+* Solvate protein (4g5j) into the water box                       
+*                                          
+
+DIMENS CHSIZE 2000000
+
+! Set variables
+! -------------
+set in     = 4g5j                                 ! protein name
+set struc  = @{in}                                ! name of input files
+set out    = @{in}_box                            ! name of output files
+
+! Set parameters
+! --------------
+set TOPPAR  = /home/sma/kinase/toppar               ! topology and parameters directory
+set top     = @TOPPAR/top_all36_prot.rtf            ! Protein topology
+set par     = @TOPPAR/par_all36_prot.prm            ! Protein parameters
+set watstr  = @TOPPAR/toppar_water_ions.str         ! water and ions
+set modstr  = @TOPPAR/toppar_all36_prot_model.str   ! model compound parameters
+set cubox   = @TOPPAR/tip216.crd                    ! unit water box
+
+! Read topology and parameter files
+! ---------------------------------
+open read card unit 10 name @top
+read  rtf card unit 10
+close unit 10
+
+open read card unit 10 name @par
+read param card flex unit 10
+close unit 10
+
+! Read top/par file for model compounds
+! -------------------------------------------------
+stream @modstr
+
+! Read water top file
+! ------------------- 
+stream @watstr
+
+!Read PSF file
+!----------------
+open read form unit 10 name setup2.psf
+read psf card unit 10
+close unit 10
+
+! Read in coordinate file
+!------------------------------
+open read form unit 13 name setup21.crd
+read coord card unit 13
+close unit 13
+
+! Reorient Solute 
+! ---------------
+coor orient
+coor stat sele all end
+
+! Read Water in
+! -------------
+stream @struc_box.str
+open read card unit 30 name @struc_box.crd
+read coor card unit 30 append
+close unit 30
+
+! Remove water molecules close to or overlapped with 
+! biomolecule, crystal water, and generated ions
+! --------------------------------------------------
+define TOTO sele .not. hydrogen .and. .not. segid SOLV end
+coor stat sele TOTO end
+coor stat sele type OH2 .and. segid SOLV end
+
+delete atom sele .byres. ( ( type OH2 .and. segid SOLV ) .and. ( TOTO .around. 2.5 ) ) end
+
+join SOLV renumber
+coor stat sele type OH2 .and. segid SOLV end
+set nwater ?nsel
+
+! WRITE NEW PDB.
+!---------------
+OPEN UNIT 1 CARD WRITe NAME setup3.pdb
+WRITe COORdinate PDB UNIT 1
+* PDB file.
+* Add bulk water
+*
+
+! Write new coordinate file
+!----------------------------
+open write card unit 1 name setup3.crd
+write coor card unit 1
+* Coordinate file
+* Add bulk water
+*
+!
+! Write PSF file
+! ---------------------
+OPEN UNIT 1 CARD WRITe NAME setup3.psf
+WRITe PSF CARD UNIT 1
+* PSF file
+* Add bulk water
+*
+
+stop
